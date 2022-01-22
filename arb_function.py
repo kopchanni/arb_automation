@@ -111,7 +111,7 @@ def get_price_t_pair(t_pair,prices_json):
         "pair_c_bid": pair_c_bid
     }
 
-# calucate sturface rate tri arb
+# calculate sturface rate for tri arb
 def cal_tri_surface_rate(t_pair,prices_dict):
     starting_amount = 1
     min_surface_rate = 0
