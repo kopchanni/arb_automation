@@ -127,12 +127,36 @@ def cal_tri_surface_rate(t_pair,prices_dict):
     calculated = 0
 
     # extract pair variables
-    a_base = t_pair["a_base:"]
-    a_quote = t_pair["a_quote:"]
-    b_base = t_pair["b_base"]
-    b_quote = t_pair["b_quote"]
-    c_base = t_pair["c_base"]
-    c_quote = t_pair["c_quote"]
+    t_p = t_pair["pair_a"][0]
+    t_p1 = t_pair["pair_a"][1]
+    t_p2 = t_pair["pair_a"][2]
+    p0_q = t_pair["pair_a"][-3]
+    p1_q = t_pair["pair_a"][-2]
+    p2_q = t_pair["pair_a"][-1]
+
+    t2_p = t_pair["pair_b"][0]
+    t2_p1 = t_pair["pair_b"][1]
+    t2_p2 = t_pair["pair_b"][2]
+    p0_q2 = t_pair["pair_b"][-3]
+    p1_q2 = t_pair["pair_b"][-2]
+    p2_q2 = t_pair["pair_b"][-1]
+
+    t3_p = t_pair["pair_b"][0]
+    t3_p1 = t_pair["pair_b"][1]
+    t3_p2 = t_pair["pair_b"][2]
+    p0_q3 = t_pair["pair_b"][-3]
+    p1_q3 = t_pair["pair_b"][-2]
+    p2_q3 = t_pair["pair_b"][-1]
+
+
+    a_base = f"{t_p}{t_p1}{t_p2}"
+    a_quote = f"{p0_q}{p1_q}{p2_q}"
+    b_base = f"{t2_p}{t2_p1}{t2_p2}"
+    b_quote = f"{p0_q}{p1_q}{p2_q}"
+    c_base = f"{t3_p}{t3_p1}{t3_p2}"
+    c_quote = f"{p0_q3}{p1_q3}{p2_q3}"
+
+    
     pair_a = t_pair["pair_a"]
     pair_b = t_pair["pair_b"]
     pair_c = t_pair["pair_c"]
@@ -425,112 +449,19 @@ def cal_tri_surface_rate(t_pair,prices_dict):
                         calculated = 1
 
 
-        '''
-        PNL OUTPUT
-        '''
-        #PNL INFO
-        PNL = token_holdings_t3 - starting_capital
-        PNL_percentage = (PNL/starting_capital)*100 if PNL != 0 else 0
+            '''
+            PNL OUTPUT
+            '''
+            #PNL INFO
+            PNL = token_holdings_t3 - starting_capital
+            PNL_percentage = (PNL/starting_capital)*100 if PNL != 0 else 0
 
-        # TRADE INFO
-        describtion_t1 = f'Start with {swap_1} of {starting_capital}. Swap at {swap_rate_1} for  {swap_2} GETTING {token_holdings_t1}'
-        print(describtion_t1)
-
-
+            # TRADE INFO
+            describtion_t1 = f'Start with {swap_1} of {starting_capital}. Swap at {swap_rate_1} for  {swap_2} GETTING {token_holdings_t1}'
+            print(describtion_t1)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # if token_holdings_t3 > starting_capital:
-        #             # print("___________________________________________")
-        #             # print(pair_a, pair_b, pair_c)
-        #             # print(starting_capital)
-        #             # print(token_holdings_t3)
-        #             # print(direction)
-        #
-        #             data_trade_1 = {
-        #             'inital_investment': starting_capital,
-        #             'direction_trade_1': direction_of_trade_1,
-        #             'swap_rate_1': swap_rate_1,
-        #             'holding_tokens1': token_holdings_t1,
-        #             'contract': contract_1
-        #         }
-        #             print("___________________________________________")
-        #             # print(data_trade_1)
-        #
-        #
-        #             data_trade_2 = {
-        #             'amount_of_asset': token_holdings_t1,
-        #             'direction_trade_2': direction_of_trade_2,
-        #             'swap_rate_2': swap_rate_2,
-        #             'holding_tokens2': token_holdings_t2,
-        #             'contract': contract_2
-        #         }
-        #             # print(data_trade_2)
-        #
-        #             # pprint.pprint(data_trade_1)
-        #             # pprint.pprint(data_trade_2)
-        #             data_trade_3 = {
-        #                 'amount_of_asset': token_holdings_t2,
-        #                 'direction_trade_3': direction_of_trade_3,
-        #                 'swap_rate_3': swap_rate_3,
-        #                 'holding_tokens3': token_holdings_t3,
-        #                 'contract': contract_3
-        #             }
-        #
-        #             df_1 = pd.DataFrame(data=data_trade_1, index=[0])
-        #             df_2 = pd.DataFrame(data=data_trade_2, index=[0])
-        #             df_3 = pd.DataFrame(data=data_trade_3, index=[0])
-        #             print(df_1)
-        #             print(df_2)
-        #             print(df_3)
-        #             print(token_holdings_t3)
-        #             print(float(swap_rate_3))
-        #
-        #             dt_utc_naive = datetime.datetime.utcfromtimestamp(0)
-        #             unix = int(datetime.datetime.now().timestamp())
-        #             # checks_cal = float(df_1['inital_investment'])
-        #             # asset_amount = float(df_3['amount_of_asset'])
-        #             # usdt_equvilant = 0
-        #             # # if direction == 'forward':
-        #             # #     # usdt_ = crypto_category(pair_c.split)
-        #             # check_symbol = get_json_data(f"https://poloniex.com/public?command=returnChartData&currencyPair={t_pair['pair_c']}&start={unix}&end={unix}&period=300")
-        #             # print(check_symbol)
-        #             # #     &start={unix}&end={unix}")
-        #             # #     print(check_symbol)
-        #             # data_trades_profit = {
-        #             #     'PROFIT': token_holdings_t3
-        #             # }
-        #
-        #
-        #                 # usdt_equvilant =
-        #             # profit = (asset_amount*usdt_equvilant) - checks_cal
-        #
 
 
 
