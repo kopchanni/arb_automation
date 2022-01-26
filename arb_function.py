@@ -3,6 +3,9 @@ from k4 import *
 import requests
 import json
 import pandas as pd
+import pprint
+from coinMarketCap import crypto_category
+import datetime
 
 def get_json_data(url):
     req = requests.get(url=url)
@@ -111,9 +114,9 @@ def get_price_t_pair(t_pair,prices_json):
         "pair_c_bid": pair_c_bid
     }
 
-# calculate sturface rate for tri arb
+# calucate sturface rate tri arb
 def cal_tri_surface_rate(t_pair,prices_dict):
-    starting_amount = 1
+    starting_capital = 1
     min_surface_rate = 0
     surface_dict = {}
     contract_2 = ""
@@ -121,8 +124,6 @@ def cal_tri_surface_rate(t_pair,prices_dict):
     direction_of_trade_1 = ""
     direction_of_trade_2 = ""
     direction_of_trade_3 = ""
-    aquired_coin_t2 = 0
-    aquired_coin_t3 = 0
     calculated = 0
 
     # extract pair variables
@@ -144,6 +145,7 @@ def cal_tri_surface_rate(t_pair,prices_dict):
     c_ask = prices_dict["pair_c_ask"]
     c_bid = prices_dict["pair_c_bid"]
 
+
     # directions and loops to the right and left
     direction_list = ['forward','reverse']
     for direction in direction_list:
@@ -158,12 +160,20 @@ def cal_tri_surface_rate(t_pair,prices_dict):
         swap_rate_3 = 0
 
         '''
-        POLONIEX RULES !!
+        TRADE DIRECTION 
+        !! POLONIEX RULES !!
         if swaping coin left (base) to right (quote) then trading_capital (1 / lowest ask)
         if swaping coin right (quote) to left (base) then trading_capital * highestbid 
+        !! !!
         '''
 
-        # ASSUMING STARTING WITH a_base & a_quote
+        """
+        >> THEORY: ASSUMING STARTING WITH a_base & a_quote <<
+        """
+
+        #
+        # ESTABLISH BASE & QUOTE POSITIONS WITH RESPECT TO
+        # DIRECTIONS
         if direction == 'forward':
             swap_1 = a_base
             swap_2 = a_quote
@@ -172,14 +182,23 @@ def cal_tri_surface_rate(t_pair,prices_dict):
         if direction == 'reverse':
             swap_1 = a_quote
             swap_2 = a_base
-            swap_rate_1 = a_bid * starting_amount
+            swap_rate_1 = a_bid * starting_capital
             direction_of_trade_1 = "quote_to_base"
 
         contract_1 = pair_a
 
-        token_holdings_t1 = starting_amount * swap_rate_1
+        token_holdings_t1 = starting_capital * swap_rate_1
+
+        '''
+                        TEST CASES
+
+        '''
 
         """forward"""
+
+        '''
+        CASE 1
+        '''
         # CASE 1: check if a_quote (token holding) matches b_quote
         if direction == 'forward':
             if a_quote == b_quote and calculated == 0:
@@ -204,8 +223,10 @@ def cal_tri_surface_rate(t_pair,prices_dict):
                 calculated = 1
 
         """
+        
         CASE 2
-        example usdt/btc > btc/eth
+        
+        
         """
         # check if a_quote (token holding) matches b_base
         if direction == 'forward':
@@ -230,7 +251,9 @@ def cal_tri_surface_rate(t_pair,prices_dict):
                     token_holdings_t3 = token_holdings_t2 * swap_rate_2
                     calculated = 1
         '''
+        
         CASE 3
+        
         '''
         # check if a_quote (token holding) matches c_quote
         if direction == 'forward':
@@ -260,6 +283,7 @@ def cal_tri_surface_rate(t_pair,prices_dict):
         CASE 4
         
         """
+
         # check if a_quote (token holding) matches c_base
         if direction == 'forward':
                 if a_quote == c_base and calculated == 0:
@@ -285,11 +309,228 @@ def cal_tri_surface_rate(t_pair,prices_dict):
                     token_holdings_t3 = token_holdings_t2 * swap_rate_2
                     calculated = 1
 
-                if token_holdings_t3 > 1:
-                    print(pair_a, pair_b, pair_c)
-                    print(starting_amount)
-                    print(token_holdings_t3)
-                    print(direction)
+                """REVERSE"""
+
+                '''
+                CASE 1
+                '''
+                # CASE 1: check if a_base (token holding) matches b_quote
+        if direction == 'reverse':
+                if a_base == b_quote and calculated == 0:
+                    swap_rate_2 = b_bid
+                    token_holdings_t2 = token_holdings_t1 * swap_rate_2
+                    direction_of_trade_2 = 'quote_to_base'
+                    contract_2 = pair_b
+
+                    # if b_base (token_holding_2) == c_base
+                    if b_base == c_base:
+                            swap_3 = c_base
+                            swap_rate_3 = 1 / c_ask
+                            direction_of_trade_3 = 'base_to_quote'
+                            contract_3 = pair_c
+                        # if b_base (token_holding_2) == c_quote
+                    if b_base == c_quote:
+                                swap_3 = c_quote
+                                swap_rate_3 = c_bid
+                                direction_of_trade_3 = 'quote_to_base'
+                                contract_3 = pair_c
+                    token_holdings_t3 = token_holdings_t2 * swap_rate_2
+                    calculated = 1
+
+                """
+
+                CASE 2
+
+
+                """
+                # check if a_base (token holding) matches b_base
+        if direction == 'reverse':
+                if a_base == b_base and calculated == 0:
+                        swap_rate_2 = 1 / b_ask
+                        token_holdings_t2 = token_holdings_t1 * swap_rate_2
+                        direction_of_trade_2 = 'base_to_quote'
+                        contract_2 = pair_b
+
+                        # if b_quote (token_holding_2) == c_base
+                        if b_quote == c_base:
+                            swap_3 = c_base
+                            swap_rate_3 = 1 / c_ask
+                            direction_of_trade_3 = 'base_to_quote'
+                            contract_3 = pair_c
+                        # if b_quote (token_holding_2) == c_quote
+                        if b_quote == c_quote:
+                            swap_3 = c_quote
+                            swap_rate_3 = c_bid
+                            direction_of_trade_3 = 'quote_to_base'
+                            contract_3 = pair_c
+                        token_holdings_t3 = token_holdings_t2 * swap_rate_2
+                        calculated = 1
+                '''
+
+                CASE 3
+
+                '''
+                # check if a_base (token holding) matches c_quote
+        if direction == 'reverse':
+                if a_base == c_quote and calculated == 0:
+                        swap_rate_2 = c_bid
+                        token_holdings_t2 = token_holdings_t1 * swap_rate_2
+                        direction_of_trade_2 = 'quote_to_base'
+                        contract_2 = pair_c
+
+                        # if c_base (token_holding_2) == b_base
+                        if c_base == b_base:
+                            swap_3 = b_base
+                            swap_rate_3 = 1 / b_ask
+                            direction_of_trade_3 = 'base_to_quote'
+                            contract_3 = pair_b
+                        # if c_base (token_holding_2) == b_quote
+                        if c_base == b_quote:
+                            swap_3 = b_quote
+                            swap_rate_3 = b_bid
+                            direction_of_trade_3 = 'quote_to_base'
+                            contract_3 = pair_b
+                        token_holdings_t3 = token_holdings_t2 * swap_rate_2
+                        calculated = 1
+
+                """
+
+                CASE 4
+
+                """
+
+                # check if a_base (token holding) matches c_base
+        if direction == 'reverse':
+            if a_base == c_base and calculated == 0:
+                        swap_rate_2 = 1 / c_ask
+                        token_holdings_t2 = token_holdings_t1 * swap_rate_2
+                        direction_of_trade_2 = 'base_to_quote'
+                        contract_2 = pair_c
+
+                        # if c_quote (token_holding_2) == b_base
+                        if c_quote == b_base:
+                            swap_3 = b_base
+                            swap_rate_3 = 1 / b_ask
+                            direction_of_trade_3 = 'base_to_quote'
+                            contract_3 = pair_b
+
+                        # if c_quote (token_holding_2) == b_quote
+                        if b_quote == c_quote:
+                            swap_3 = b_quote
+                            swap_rate_3 = c_bid
+                            direction_of_trade_3 = 'quote_to_base'
+                            contract_3 = pair_b
+
+                        token_holdings_t3 = token_holdings_t2 * swap_rate_2
+                        calculated = 1
+
+
+        '''
+        PNL OUTPUT
+        '''
+        #PNL INFO
+        PNL = token_holdings_t3 - starting_capital
+        PNL_percentage = (PNL/starting_capital)*100 if PNL != 0 else 0
+
+        # TRADE INFO
+        describtion_t1 = f'Start with {swap_1} of {starting_capital}. Swap at {swap_rate_1} for  {swap_2} GETTING {token_holdings_t1}'
+        print(describtion_t1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # if token_holdings_t3 > starting_capital:
+        #             # print("___________________________________________")
+        #             # print(pair_a, pair_b, pair_c)
+        #             # print(starting_capital)
+        #             # print(token_holdings_t3)
+        #             # print(direction)
+        #
+        #             data_trade_1 = {
+        #             'inital_investment': starting_capital,
+        #             'direction_trade_1': direction_of_trade_1,
+        #             'swap_rate_1': swap_rate_1,
+        #             'holding_tokens1': token_holdings_t1,
+        #             'contract': contract_1
+        #         }
+        #             print("___________________________________________")
+        #             # print(data_trade_1)
+        #
+        #
+        #             data_trade_2 = {
+        #             'amount_of_asset': token_holdings_t1,
+        #             'direction_trade_2': direction_of_trade_2,
+        #             'swap_rate_2': swap_rate_2,
+        #             'holding_tokens2': token_holdings_t2,
+        #             'contract': contract_2
+        #         }
+        #             # print(data_trade_2)
+        #
+        #             # pprint.pprint(data_trade_1)
+        #             # pprint.pprint(data_trade_2)
+        #             data_trade_3 = {
+        #                 'amount_of_asset': token_holdings_t2,
+        #                 'direction_trade_3': direction_of_trade_3,
+        #                 'swap_rate_3': swap_rate_3,
+        #                 'holding_tokens3': token_holdings_t3,
+        #                 'contract': contract_3
+        #             }
+        #
+        #             df_1 = pd.DataFrame(data=data_trade_1, index=[0])
+        #             df_2 = pd.DataFrame(data=data_trade_2, index=[0])
+        #             df_3 = pd.DataFrame(data=data_trade_3, index=[0])
+        #             print(df_1)
+        #             print(df_2)
+        #             print(df_3)
+        #             print(token_holdings_t3)
+        #             print(float(swap_rate_3))
+        #
+        #             dt_utc_naive = datetime.datetime.utcfromtimestamp(0)
+        #             unix = int(datetime.datetime.now().timestamp())
+        #             # checks_cal = float(df_1['inital_investment'])
+        #             # asset_amount = float(df_3['amount_of_asset'])
+        #             # usdt_equvilant = 0
+        #             # # if direction == 'forward':
+        #             # #     # usdt_ = crypto_category(pair_c.split)
+        #             # check_symbol = get_json_data(f"https://poloniex.com/public?command=returnChartData&currencyPair={t_pair['pair_c']}&start={unix}&end={unix}&period=300")
+        #             # print(check_symbol)
+        #             # #     &start={unix}&end={unix}")
+        #             # #     print(check_symbol)
+        #             # data_trades_profit = {
+        #             #     'PROFIT': token_holdings_t3
+        #             # }
+        #
+        #
+        #                 # usdt_equvilant =
+        #             # profit = (asset_amount*usdt_equvilant) - checks_cal
+        #
 
 
 
