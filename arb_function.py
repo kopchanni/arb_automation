@@ -457,8 +457,22 @@ def cal_tri_surface_rate(t_pair,prices_dict):
             PNL_percentage = (PNL/starting_capital)*100 if PNL != 0 else 0
 
             # TRADE INFO
-            describtion_t1 = f'Start with {swap_1} of {starting_capital}. Swap at {swap_rate_1} for  {swap_2} GETTING {token_holdings_t1}'
+            describtion_t1 = f'Start with {starting_capital} of {swap_1}. ' \
+                             f'\nSwap at {swap_rate_1} for  {swap_2} GETTING {token_holdings_t1}' \
+                             f'\n PAIR: {pair_a}' \
+                             f'\n{direction_of_trade_1}'
+            describtion_t2 = f'Swap {token_holdings_t1} of {swap_2} for {swap_3} at {float(int(swap_rate_2))} getting {token_holdings_t2}' \
+                             f'\n PAIR: {pair_b}' \
+                             f'\n{direction_of_trade_2}'
+            describtion_t3 = f'Swap {token_holdings_t2} of {swap_1} at {swap_rate_3} getting {token_holdings_t3}' \
+                             f'\n PAIR: {pair_c}' \
+                             f'\n{direction_of_trade_3}'
+
+            print("        -            >>>>>        PNL         <<<<<            -       ")
             print(describtion_t1)
+            print(describtion_t2)
+            print(describtion_t3)
+            print('------------------------------------------------------------------')
 
 
 
